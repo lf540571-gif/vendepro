@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>VendePro — Plataforma de Ventas</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Satoshi:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ====== VARIABLES ====== */
+:root{
+  --bg:#080B10;--surface:#0E1118;--card:#141820;
+  --border:#1E2535;--border2:#2A3347;
+  --verde:#00E5A0;--verde2:#00b87d;
+  --naranja:#FF7A3D;--naranja2:#cc5a25;
+  --azul:#3D8BFF;--rojo:#FF4D6A;--amarillo:#FFD166;
+  --texto:#EEF0F5;--texto2:#7A8499;--texto3:#4A5568;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Satoshi',sans-serif;background:var(--bg);color:var(--texto);min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* ====== AUTH ====== */
+#auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.auth-bg{position:absolute;inset:0;background:radial-gradient(ellipse 600px 400px at 10% 60%,rgba(0,229,160,.06),transparent 70%),radial-gradient(ellipse 500px 350px at 90% 20%,rgba(255,122,61,.05),transparent 70%);}
+.auth-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:.3;}
+.auth-box{position:relative;width:100%;max-width:420px;padding:1rem;}
+.auth-logo{text-align:center;margin-bottom:2.5rem;}
+.auth-logo-text{font-family:'Clash Display',sans-serif;font-size:2.6rem;font-weight:700;letter-spacing:-2px;}
+.auth-logo-text span{color:var(--verde);}
+.auth-logo-sub{color:var(--texto2);font-size:.85rem;margin-top:.3rem;letter-spacing:1px;}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:2rem;}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;background:var(--card);border-radius:12px;padding:.3rem;margin-bottom:1.8rem;}
+.auth-tab{padding:.6rem;text-align:center;border-radius:9px;cursor:pointer;font-size:.85rem;font-weight:500;color:var(--texto2);transition:all .2s;}
+.auth-tab.activo{background:var(--border2);color:var(--texto);}
+.form-g{margin-bottom:1rem;}
+.form-l{font-size:.75rem;color:var(--texto2);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem;display:block;font-weight:500;}
+.form-i{width:100%;background:var(--card);border:1px solid var(--border);color:var(--texto);border-radius:10px;padding:.75rem 1rem;font-size:.9rem;font-family:'Satoshi',sans-serif;outline:none;transition:border-color .2s;}
+.form-i:focus{border-color:var(--verde);}
+.form-note{font-size:.75rem;color:var(--texto2);margin-top:.3rem;}
+.rol-selector{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.5rem;}
+.rol-opt{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem .8rem;text-align:center;cursor:pointer;transition:all .25s;}
+.rol-opt.sel-v{border-color:var(--verde);background:rgba(0,229,160,.06);}
+.rol-opt.sel-n{border-color:var(--naranja);background:rgba(255,122,61,.06);}
+.rol-opt-ico{font-size:1.8rem;display:block;margin-bottom:.4rem;}
+.rol-opt-label{font-size:.8rem;font-weight:600;}
+.sel-v .rol-opt-label{color:var(--verde);}
+.sel-n .rol-opt-label{color:var(--naranja);}
+.btn-auth{width:100%;padding:.9rem;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer;font-family:'Clash Display',sans-serif;transition:all .2s;margin-top:.5rem;}
+.btn-auth-v{background:var(--verde);color:#080B10;}
+.btn-auth-v:hover{background:var(--verde2);}
+.btn-auth-n{background:var(--naranja);color:#fff;}
+.btn-auth-n:hover{background:var(--naranja2);}
+.auth-switch{text-align:center;margin-top:1rem;font-size:.85rem;color:var(--texto2);}
+.auth-switch a{color:var(--verde);cursor:pointer;}
+.auth-err{background:rgba(255,77,106,.1);border:1px solid rgba(255,77,106,.3);color:#ff8fa0;border-radius:10px;padding:.7rem 1rem;font-size:.83rem;margin-bottom:1rem;display:none;}
+
+/* ====== APP ====== */
+#app-screen{display:none;min-height:100vh;flex-direction:column;}
+.topbar{height:60px;background:rgba(8,11,16,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;position:sticky;top:0;z-index:100;}
+.topbar-logo{font-family:'Clash Display',sans-serif;font-size:1.5rem;font-weight:700;letter-spacing:-1px;}
+.topbar-logo span{color:var(--verde);}
+.tbadge{display:flex;align-items:center;gap:.5rem;padding:.35rem .9rem;border-radius:50px;font-size:.78rem;font-weight:600;}
+.tbadge-v{background:rgba(0,229,160,.1);color:var(--verde);border:1px solid rgba(0,229,160,.25);}
+.tbadge-n{background:rgba(255,122,61,.1);color:var(--naranja);border:1px solid rgba(255,122,61,.25);}
+.layout{display:flex;min-height:calc(100vh - 60px);}
+.sidebar{width:240px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;display:flex;flex-direction:column;gap:.3rem;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto;}
+.sb-section{font-size:.65rem;text-transform:uppercase;letter-spacing:2px;color:var(--texto3);padding:.8rem .5rem .4rem;font-weight:600;}
+.sb-item{display:flex;align-items:center;gap:.8rem;padding:.65rem .8rem;border-radius:10px;cursor:pointer;font-size:.88rem;color:var(--texto2);transition:all .2s;border:1px solid transparent;}
+.sb-item:hover{background:var(--card);color:var(--texto);}
+.sb-item.av{background:rgba(0,229,160,.08);color:var(--verde);border-color:rgba(0,229,160,.2);}
+.sb-item.an{background:rgba(255,122,61,.08);color:var(--naranja);border-color:rgba(255,122,61,.2);}
+.sb-item .ico{font-size:1rem;width:20px;text-align:center;}
+.sb-bottom{margin-top:auto;padding-top:1rem;border-top:1px solid var(--border);}
+.user-chip{display:flex;align-items:center;gap:.7rem;padding:.6rem .5rem;}
+.uavatar{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700;font-family:'Clash Display',sans-serif;flex-shrink:0;}
+.uav-v{background:rgba(0,229,160,.15);color:var(--verde);border:1px solid rgba(0,229,160,.3);}
+.uav-n{background:rgba(255,122,61,.15);color:var(--naranja);border:1px solid rgba(255,122,61,.3);}
+.uname{font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;}
+.urol{font-size:.7rem;color:var(--texto2);}
+.btn-logout{background:none;border:1px solid var(--border);color:var(--texto2);padding:.4rem .7rem;border-radius:8px;cursor:pointer;font-size:.75rem;font-family:'Satoshi',sans-serif;transition:all .2s;white-space:nowrap;}
+.btn-logout:hover{border-color:var(--rojo);color:var(--rojo);}
+.ham{display:none;background:none;border:none;color:var(--texto);font-size:1.4rem;cursor:pointer;padding:.3rem;}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;}
+.content{flex:1;padding:2rem;overflow-y:auto;min-width:0;}
+.page{display:none;}
+.page.activo{display:block;}
+
+/* ====== SECCIONES ====== */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.8rem;flex-wrap:wrap;gap:1rem;}
+.sec-title{font-family:'Clash Display',sans-serif;font-size:1.6rem;font-weight:600;letter-spacing:-.5px;}
+.sec-sub{font-size:.85rem;color:var(--texto2);margin-top:.2rem;}
+
+/* ====== STATS ====== */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.3rem;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 16px 0 60px;opacity:.3;}
+.sc-v::before{background:var(--verde);}
+.sc-n::before{background:var(--naranja);}
+.sc-a::before{background:var(--azul);}
+.sc-am::before{background:var(--amarillo);}
+.slabel{font-size:.75rem;color:var(--texto2);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem;}
+.sval{font-family:'Clash Display',sans-serif;font-size:1.8rem;font-weight:700;}
+.sval.cv{color:var(--verde);}
+.sval.cn{color:var(--naranja);}
+.sval.ca{color:var(--azul);}
+.sval.cam{color:var(--amarillo);}
+.sdelta{font-size:.75rem;color:var(--texto2);margin-top:.3rem;}
+
+/* ====== CHARTS ====== */
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1.5rem;margin-bottom:1.5rem;}
+.chart-title{font-family:'Clash Display',sans-serif;font-size:1rem;font-weight:600;margin-bottom:1.2rem;display:flex;align-items:center;justify-content:space-between;}
+canvas{width:100%!important;display:block;}
+
+/* ====== PRODUCTOS GRID ====== */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.2rem;}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:all .3s;display:flex;flex-direction:column;}
+.pcard:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 16px 40px rgba(0,0,0,.4);}
+.pimg-wrap{width:100%;height:200px;position:relative;overflow:hidden;background:var(--surface);}
+.pimg{width:100%;height:100%;object-fit:cover;display:block;}
+.pemoji{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;background:linear-gradient(135deg,var(--surface),var(--border));}
+.pcat-badge{position:absolute;top:10px;left:10px;background:rgba(8,11,16,.85);backdrop-filter:blur(8px);border:1px solid var(--border2);border-radius:6px;padding:.25rem .6rem;font-size:.7rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--texto2);}
+.pbody{padding:1.2rem;flex:1;display:flex;flex-direction:column;gap:.65rem;}
+.pnombre{font-family:'Clash Display',sans-serif;font-size:1rem;font-weight:600;line-height:1.3;}
+.pdesc{font-size:.82rem;color:var(--texto2);line-height:1.6;flex:1;}
+.precios-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem;}
+.precio-row{display:flex;align-items:center;justify-content:space-between;padding:.3rem 0;}
+.precio-row+.precio-row{border-top:1px solid var(--border);}
+.precio-key{font-size:.78rem;color:var(--texto2);display:flex;align-items:center;gap:.5rem;}
+.bullet{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.b-p{background:var(--texto3);}
+.b-g{background:var(--verde);}
+.pamount{font-family:'Clash Display',sans-serif;font-weight:700;}
+.pa-p{font-size:1.15rem;color:var(--texto);}
+.pa-g{font-size:1.1rem;color:var(--verde);}
+.gtag{margin-top:.6rem;background:rgba(0,229,160,.07);border:1px solid rgba(0,229,160,.15);border-radius:8px;padding:.45rem .7rem;font-size:.75rem;color:var(--verde);display:flex;align-items:center;gap:.4rem;}
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:.6rem;background:#25D366;color:#fff;border:none;border-radius:11px;padding:.8rem;font-size:.88rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s;font-family:'Satoshi',sans-serif;width:100%;}
+.btn-wa:hover{background:#1db954;box-shadow:0 6px 20px rgba(37,211,102,.3);}
+.pactions{display:flex;gap:.5rem;padding:0 1.2rem 1.2rem;}
+.btn-edit{flex:1;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.2);color:var(--verde);border-radius:9px;padding:.55rem;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:'Satoshi',sans-serif;}
+.btn-edit:hover{background:rgba(0,229,160,.15);}
+.btn-del{background:rgba(255,77,106,.06);border:1px solid rgba(255,77,106,.15);color:var(--rojo);border-radius:9px;padding:.55rem .8rem;font-size:.8rem;cursor:pointer;transition:all .2s;font-family:'Satoshi',sans-serif;}
+.btn-del:hover{background:rgba(255,77,106,.12);}
+
+/* ====== BUTTONS ====== */
+.btn-p{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.3rem;border:none;border-radius:10px;font-size:.88rem;font-weight:600;cursor:pointer;font-family:'Clash Display',sans-serif;transition:all .2s;}
+.bpv{background:var(--verde);color:#080B10;}
+.bpv:hover{background:var(--verde2);}
+.bpg{background:var(--card);border:1px solid var(--border2);color:var(--texto2);}
+.bpg:hover{color:var(--texto);border-color:var(--texto2);}
+
+/* ====== FILTROS ====== */
+.ftabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.5rem;}
+.ftab{background:var(--card);border:1px solid var(--border);color:var(--texto2);padding:.35rem .85rem;border-radius:50px;font-size:.78rem;cursor:pointer;transition:all .2s;font-family:'Satoshi',sans-serif;}
+.ftab:hover{border-color:var(--border2);color:var(--texto);}
+.ftab.fav{background:rgba(0,229,160,.1);color:var(--verde);border-color:rgba(0,229,160,.3);}
+.ftab.fan{background:rgba(255,122,61,.1);color:var(--naranja);border-color:rgba(255,122,61,.3);}
+
+/* ====== TABLA COMISIONES ====== */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:1.5rem;}
+.table-hdr{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:.9rem 1.2rem;background:var(--surface);border-bottom:1px solid var(--border);font-size:.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--texto3);font-weight:600;}
+.table-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:.9rem 1.2rem;border-bottom:1px solid var(--border);align-items:center;transition:background .15s;}
+.table-row:last-child{border-bottom:none;}
+.table-row:hover{background:rgba(255,255,255,.02);}
+.pmini{display:flex;align-items:center;gap:.7rem;}
+.pmini-img{width:36px;height:36px;border-radius:8px;object-fit:cover;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;overflow:hidden;}
+.pmini-name{font-size:.85rem;font-weight:500;}
+.pmini-cat{font-size:.72rem;color:var(--texto2);}
+.tag-p{font-size:.85rem;font-weight:600;color:var(--texto);}
+.tag-g{font-size:.85rem;font-weight:700;color:var(--verde);}
+.tag-cat{display:inline-block;background:rgba(61,139,255,.1);color:var(--azul);border-radius:6px;padding:.2rem .5rem;font-size:.72rem;font-weight:600;}
+
+/* ====== WELCOME CARD ====== */
+.welcome-card{background:linear-gradient(135deg,rgba(0,229,160,.08),rgba(61,139,255,.05));border:1px solid rgba(0,229,160,.2);border-radius:20px;padding:1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.welcome-card.wn{background:linear-gradient(135deg,rgba(255,122,61,.08),rgba(255,209,102,.04));border-color:rgba(255,122,61,.2);}
+.welcome-text h2{font-family:'Clash Display',sans-serif;font-size:1.3rem;margin-bottom:.3rem;}
+.welcome-text p{font-size:.85rem;color:var(--texto2);}
+
+/* ====== FORMULARIO PRODUCTO ====== */
+.form-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:1.8rem;max-width:580px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
+.form-sel{width:100%;background:var(--card);border:1px solid var(--border);color:var(--texto);border-radius:10px;padding:.75rem 1rem;font-size:.9rem;font-family:'Satoshi',sans-serif;outline:none;cursor:pointer;transition:border-color .2s;}
+.form-sel:focus{border-color:var(--verde);}
+.btn-submit{display:flex;align-items:center;justify-content:center;width:100%;padding:.9rem;background:var(--verde);color:#080B10;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer;font-family:'Clash Display',sans-serif;transition:all .2s;margin-top:.5rem;}
+.btn-submit:hover{background:var(--verde2);}
+
+/* ====== IMAGE UPLOADER ====== */
+.img-uploader{margin-bottom:1rem;}
+/* Estado vacío */
+.img-empty{border:2px dashed var(--border2);border-radius:14px;background:var(--surface);padding:2.2rem 1rem;text-align:center;transition:border-color .2s;}
+.img-empty:hover{border-color:var(--verde);}
+.img-empty-ico{width:54px;height:54px;border-radius:14px;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.2);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto .8rem;}
+.img-empty-title{font-family:'Clash Display',sans-serif;font-size:.95rem;font-weight:600;color:var(--texto);margin-bottom:.4rem;}
+.img-empty-sub{font-size:.78rem;color:var(--texto2);margin-bottom:1.2rem;line-height:1.6;}
+.btn-pick{display:inline-flex;align-items:center;gap:.5rem;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);color:var(--verde);border-radius:10px;padding:.6rem 1.4rem;font-size:.88rem;font-weight:600;cursor:pointer;font-family:'Clash Display',sans-serif;transition:background .2s;}
+.btn-pick:hover{background:rgba(0,229,160,.18);}
+/* Estado con preview */
+.img-preview-box{display:none;border-radius:14px;overflow:hidden;position:relative;background:var(--surface);}
+.img-preview-box.show{display:block;}
+.img-preview-img{width:100%;height:220px;object-fit:cover;display:block;}
+.img-preview-bar{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.75));padding:1rem 1rem .8rem;display:flex;align-items:center;justify-content:space-between;}
+.img-size-label{font-size:.72rem;color:rgba(255,255,255,.6);}
+.img-bar-btns{display:flex;gap:.5rem;}
+.btn-img-action{background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:.4rem .8rem;font-size:.78rem;font-weight:600;cursor:pointer;font-family:'Satoshi',sans-serif;transition:background .15s;}
+.btn-img-action:hover{background:rgba(255,255,255,.25);}
+.btn-img-action.danger{border-color:rgba(255,77,106,.35);color:#ff8fa0;}
+.btn-img-action.danger:hover{background:rgba(255,77,106,.2);}
+.img-note{font-size:.75rem;color:var(--texto2);margin-top:.4rem;}
+
+/* ====== EMPTY STATE ====== */
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--texto2);grid-column:1/-1;}
+.empty-state .eico{font-size:3.5rem;margin-bottom:1rem;}
+.empty-state h3{font-family:'Clash Display',sans-serif;font-size:1.1rem;color:var(--texto);margin-bottom:.4rem;}
+
+/* ====== TOAST ====== */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(120px);background:var(--verde);color:#080B10;padding:.75rem 1.5rem;border-radius:50px;font-weight:600;font-size:.88rem;z-index:999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.err{background:var(--rojo);color:#fff;}
+
+/* ====== ANIMATIONS ====== */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.fi{animation:fadeUp .4s ease both;}
+
+/* ====== RESPONSIVE ====== */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:-260px;top:0;height:100vh;z-index:60;transition:left .3s;padding-top:5rem;}
+  .sidebar.open{left:0;}
+  .sb-overlay.open{display:block;}
+  .ham{display:block;}
+  .content{padding:1.2rem;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .form-row{grid-template-columns:1fr;}
+  .table-hdr,.table-row{grid-template-columns:2fr 1fr 1fr;}
+  .table-hdr div:last-child,.table-row div:last-child{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ AUTH ============ -->
+<div id="auth-screen">
+  <div class="auth-bg"></div>
+  <div class="auth-grid"></div>
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-text">Vende<span>Pro</span></div>
+      <div class="auth-logo-sub">PLATAFORMA DE VENTAS DIRECTAS</div>
+    </div>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <div class="auth-tab activo" id="tab-login" onclick="switchTab('login')">Ingresar</div>
+        <div class="auth-tab" id="tab-reg" onclick="switchTab('registro')">Registrarse</div>
+      </div>
+      <div class="auth-err" id="auth-err"></div>
+
+      <!-- LOGIN -->
+      <div id="form-login">
+        <div class="form-g">
+          <label class="form-l">Correo electrónico</label>
+          <input class="form-i" type="email" id="l-email" placeholder="tucorreo@mail.com">
+        </div>
+        <div class="form-g">
+          <label class="form-l">Contraseña</label>
+          <input class="form-i" type="password" id="l-pass" placeholder="••••••••">
+        </div>
+        <button class="btn-auth btn-auth-v" onclick="hacerLogin()">Entrar a mi panel →</button>
+        <div class="auth-switch">¿No tienes cuenta? <a onclick="switchTab('registro')">Regístrate gratis</a></div>
+      </div>
+
+      <!-- REGISTRO -->
+      <div id="form-reg" style="display:none">
+        <div class="form-g">
+          <label class="form-l">Nombre completo</label>
+          <input class="form-i" type="text" id="r-nombre" placeholder="Tu nombre">
+        </div>
+        <div class="form-g">
+          <label class="form-l">Correo electrónico</label>
+          <input class="form-i" type="email" id="r-email" placeholder="tucorreo@mail.com">
+        </div>
+        <div class="form-g">
+          <label class="form-l">Contraseña</label>
+          <input class="form-i" type="password" id="r-pass" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="form-g">
+          <label class="form-l">Tipo de cuenta</label>
+          <div class="rol-selector">
+            <div class="rol-opt" id="opt-v" onclick="selRol('vendedor')">
+              <span class="rol-opt-ico">🏪</span>
+              <div class="rol-opt-label">Vendedor</div>
+              <div style="font-size:.72rem;color:var(--texto2);margin-top:.3rem">Gestiona el catálogo</div>
+            </div>
+            <div class="rol-opt" id="opt-n" onclick="selRol('promotor')">
+              <span class="rol-opt-ico">📣</span>
+              <div class="rol-opt-label">Promotor</div>
+              <div style="font-size:.72rem;color:var(--texto2);margin-top:.3rem">Vende y gana comisiones</div>
+            </div>
+          </div>
+        </div>
+        <button class="btn-auth btn-auth-v" id="btn-reg" onclick="hacerRegistro()">Crear cuenta →</button>
+        <div class="auth-switch">¿Ya tienes cuenta? <a onclick="switchTab('login')">Inicia sesión</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app-screen">
+  <div class="sb-overlay" id="sb-overlay" onclick="toggleSb()"></div>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:.8rem">
+      <button class="ham" onclick="toggleSb()">☰</button>
+      <div class="topbar-logo">Vende<span>Pro</span></div>
+    </div>
+    <div class="tbadge" id="top-badge"></div>
+  </div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <div class="sb-section">Menú</div>
+      <div class="sb-item" id="nav-dashboard" onclick="navTo('dashboard')"><span class="ico">📊</span> Dashboard</div>
+      <div class="sb-item" id="nav-catalogo" onclick="navTo('catalogo')"><span class="ico">🛍️</span> Catálogo</div>
+      <div id="wrap-mis" style="display:none">
+        <div class="sb-item" id="nav-mis-productos" onclick="navTo('mis-productos')"><span class="ico">📦</span> Mis Productos</div>
+      </div>
+      <div id="wrap-agregar" style="display:none">
+        <div class="sb-item" id="nav-agregar" onclick="navTo('agregar')"><span class="ico">➕</span> Agregar Producto</div>
+      </div>
+      <div id="wrap-comisiones" style="display:none">
+        <div class="sb-item" id="nav-comisiones" onclick="navTo('comisiones')"><span class="ico">💸</span> Mis Comisiones</div>
+      </div>
+      <div class="sb-bottom">
+        <div class="user-chip">
+          <div class="uavatar" id="sb-avatar"></div>
+          <div style="flex:1;min-width:0">
+            <div class="uname" id="sb-name"></div>
+            <div class="urol" id="sb-rol"></div>
+          </div>
+          <button class="btn-logout" onclick="logout()">Salir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT AREA -->
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page" id="page-dashboard">
+        <div class="welcome-card" id="wcard">
+          <div style="font-size:2.5rem" id="wico"></div>
+          <div class="welcome-text">
+            <h2 id="wmsg"></h2>
+            <p id="wsub"></p>
+          </div>
+        </div>
+        <div class="stats-row" id="dash-stats"></div>
+        <div id="dash-charts"></div>
+      </div>
+
+      <!-- CATÁLOGO -->
+      <div class="page" id="page-catalogo">
+        <div class="sec-hdr">
+          <div>
+            <div class="sec-title">Catálogo de Productos</div>
+            <div class="sec-sub">Todos los productos disponibles para vender</div>
+          </div>
+        </div>
+        <div class="ftabs" id="cat-ftabs"></div>
+        <div class="pgrid" id="cat-grid"></div>
+      </div>
+
+      <!-- MIS PRODUCTOS -->
+      <div class="page" id="page-mis-productos">
+        <div class="sec-hdr">
+          <div>
+            <div class="sec-title">Mis Productos</div>
+            <div class="sec-sub">Gestiona tu catálogo completo</div>
+          </div>
+          <button class="btn-p bpv" onclick="navTo('agregar')">+ Agregar</button>
+        </div>
+        <div class="ftabs" id="mp-ftabs"></div>
+        <div class="pgrid" id="mp-grid"></div>
+      </div>
+
+      <!-- COMISIONES -->
+      <div class="page" id="page-comisiones">
+        <div class="sec-hdr">
+          <div>
+            <div class="sec-title">Mis Comisiones</div>
+            <div class="sec-sub">Cuánto ganas por producto vendido</div>
+          </div>
+        </div>
+        <div class="stats-row" id="com-stats"></div>
+        <div class="chart-card">
+          <div class="chart-title">Comisión por producto</div>
+          <canvas id="chart-com" height="220"></canvas>
+        </div>
+        <div class="table-wrap">
+          <div class="table-hdr">
+            <div>Producto</div><div>Precio</div><div>Tu comisión</div><div>Categoría</div>
+          </div>
+          <div id="com-table"></div>
+        </div>
+      </div>
+
+      <!-- AGREGAR / EDITAR -->
+      <div class="page" id="page-agregar">
+        <div class="sec-hdr">
+          <div>
+            <div class="sec-title" id="form-titulo">Nuevo Producto</div>
+            <div class="sec-sub">Completa los datos del producto</div>
+          </div>
+          <button class="btn-p bpg" onclick="navTo('mis-productos')">← Volver</button>
+        </div>
+        <div class="form-card">
+
+          <!-- ===== IMAGE UPLOADER ===== -->
+          <div class="form-g img-uploader">
+            <label class="form-l">📷 Imagen del producto</label>
+
+            <!-- INPUT FILE — fuera de cualquier contenedor, activado solo por JS -->
+            <input type="file" id="file-input"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              style="position:fixed;top:-999px;left:-999px;width:1px;height:1px;opacity:0;"
+              onchange="onFileChange(event)">
+
+            <!-- Valor guardado en base64 -->
+            <input type="hidden" id="p-imagen">
+
+            <!-- Estado: sin imagen -->
+            <div class="img-empty" id="img-empty">
+              <div class="img-empty-ico">🖼️</div>
+              <div class="img-empty-title">Sin imagen seleccionada</div>
+              <div class="img-empty-sub">JPG · PNG · WEBP &nbsp;·&nbsp; Máx. 5 MB<br>Funciona en Android e iPhone 📱</div>
+              <button type="button" class="btn-pick" id="btn-pick" onclick="abrirGaleria()">
+                📷 Seleccionar imagen
+              </button>
+            </div>
+
+            <!-- Estado: con preview -->
+            <div class="img-preview-box" id="img-preview-box">
+              <img class="img-preview-img" id="img-preview-img" src="" alt="Preview">
+              <div class="img-preview-bar">
+                <span class="img-size-label" id="img-size-label"></span>
+                <div class="img-bar-btns">
+                  <button type="button" class="btn-img-action" onclick="abrirGaleria()">✏️ Cambiar</button>
+                  <button type="button" class="btn-img-action danger" onclick="quitarImg()">🗑 Quitar</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="img-note" id="img-note">Toca "Seleccionar imagen" para abrir tu galería.</div>
+          </div>
+
+          <!-- Emoji fallback -->
+          <div class="form-g" id="emoji-group">
+            <label class="form-l">Emoji <span style="color:var(--texto3);font-size:.7rem">(si no hay imagen)</span></label>
+            <input class="form-i" type="text" id="p-emoji" placeholder="🛍️" maxlength="4">
+          </div>
+
+          <!-- Campos del producto -->
+          <div class="form-g">
+            <label class="form-l">Nombre del producto *</label>
+            <input class="form-i" type="text" id="p-nombre" placeholder="Ej: Crema facial hidratante Premium">
+          </div>
+          <div class="form-g">
+            <label class="form-l">Categoría</label>
+            <input class="form-i" type="text" id="p-categoria" placeholder="Ej: Belleza, Salud, Hogar, Moda…">
+          </div>
+          <div class="form-g">
+            <label class="form-l">Descripción *</label>
+            <textarea class="form-i" id="p-desc" placeholder="Describe el producto: características, beneficios…" style="resize:vertical;min-height:90px;"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-g">
+              <label class="form-l">💰 Precio de venta *</label>
+              <input class="form-i" type="number" id="p-precio" placeholder="0.00" step="0.01" min="0">
+            </div>
+            <div class="form-g">
+              <label class="form-l">✅ Ganancia por venta *</label>
+              <input class="form-i" type="number" id="p-ganancia" placeholder="0.00" step="0.01" min="0">
+              <div class="form-note">Lo que gana el promotor</div>
+            </div>
+          </div>
+          <div class="form-g">
+            <label class="form-l">Moneda</label>
+            <select class="form-sel" id="p-moneda">
+              <option value="$">$ — Pesos MXN</option>
+              <option value="USD">USD — Dólares</option>
+              <option value="COP">COP — Pesos colombianos</option>
+              <option value="S/.">S/. — Soles PEN</option>
+              <option value="Q">Q — Quetzales</option>
+              <option value="Bs">Bs — Bolívares</option>
+            </select>
+          </div>
+          <input type="hidden" id="p-edit-id" value="">
+          <button type="button" class="btn-submit" id="btn-guardar" onclick="guardarProducto()">
+            Guardar Producto ✓
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /layout -->
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ==========================================================
+//  ESTADO
+// ==========================================================
+let usuarios  = JSON.parse(localStorage.getItem('vp_u') || '[]');
+let productos = JSON.parse(localStorage.getItem('vp_p') || 'null');
+let sesion    = JSON.parse(sessionStorage.getItem('vp_s') || 'null');
+let rolSel    = '';
+let filtro    = 'todos';
+let charts    = {};
+
+if (!productos) {
+  productos = [
+    {id:1,nombre:"Crema Facial Hidratante Premium",categoria:"Belleza",descripcion:"Con ácido hialurónico y vitamina C. Hidrata profundamente y reduce líneas de expresión. Frasco 50 ml.",precio:350,ganancia:120,moneda:"$",imagen:"",emoji:"✨"},
+    {id:2,nombre:"Suplemento Colágeno + Vitaminas",categoria:"Salud",descripcion:"Fórmula avanzada con colágeno hidrolizado, biotina y vitamina E. Sabor fresa, 30 sobres.",precio:480,ganancia:160,moneda:"$",imagen:"",emoji:"💊"},
+    {id:3,nombre:"Difusor Aromas + 6 Aceites",categoria:"Hogar",descripcion:"Difusor ultrasónico con 6 aceites esenciales: lavanda, eucalipto, naranja, rosa, menta y vainilla.",precio:720,ganancia:250,moneda:"$",imagen:"",emoji:"🕯️"},
+    {id:4,nombre:"Bolso Piel Genuina Crossbody",categoria:"Moda",descripcion:"Piel genuina con herrajes dorados. Tira ajustable, bolsillo interior. En negro, miel y vino.",precio:950,ganancia:300,moneda:"$",imagen:"",emoji:"👜"},
+    {id:5,nombre:"Kit Skincare Completo",categoria:"Belleza",descripcion:"Set de 5 productos: limpiador, tónico, sérum, crema y contorno de ojos. Para todo tipo de piel.",precio:1200,ganancia:420,moneda:"$",imagen:"",emoji:"🧴"},
+  ];
+  saveP();
+}
+
+function saveP(){ localStorage.setItem('vp_p', JSON.stringify(productos)); }
+function saveU(){ localStorage.setItem('vp_u', JSON.stringify(usuarios)); }
+
+// ==========================================================
+//  AUTH
+// ==========================================================
+function switchTab(t) {
+  document.getElementById('tab-login').classList.toggle('activo', t==='login');
+  document.getElementById('tab-reg').classList.toggle('activo', t==='registro');
+  document.getElementById('form-login').style.display = t==='login' ? 'block' : 'none';
+  document.getElementById('form-reg').style.display   = t==='registro' ? 'block' : 'none';
+  document.getElementById('auth-err').style.display   = 'none';
+}
+function selRol(r) {
+  rolSel = r;
+  document.getElementById('opt-v').className = 'rol-opt' + (r==='vendedor' ? ' sel-v' : '');
+  document.getElementById('opt-n').className = 'rol-opt' + (r==='promotor' ? ' sel-n' : '');
+  document.getElementById('btn-reg').className = r==='promotor' ? 'btn-auth btn-auth-n' : 'btn-auth btn-auth-v';
+}
+function showErr(m){ const e=document.getElementById('auth-err'); e.textContent=m; e.style.display='block'; }
+function hacerLogin() {
+  const email = document.getElementById('l-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('l-pass').value;
+  if(!email||!pass){ showErr('Completa todos los campos'); return; }
+  const u = usuarios.find(u=>u.email===email && u.pass===pass);
+  if(!u){ showErr('Correo o contraseña incorrectos'); return; }
+  iniciarSesion(u);
+}
+function hacerRegistro() {
+  const nombre = document.getElementById('r-nombre').value.trim();
+  const email  = document.getElementById('r-email').value.trim().toLowerCase();
+  const pass   = document.getElementById('r-pass').value;
+  if(!nombre||!email||!pass){ showErr('Completa todos los campos'); return; }
+  if(pass.length < 6){ showErr('Contraseña mínimo 6 caracteres'); return; }
+  if(!rolSel){ showErr('Selecciona tu tipo de cuenta'); return; }
+  if(usuarios.find(u=>u.email===email)){ showErr('Ya existe una cuenta con ese correo'); return; }
+  const u = {id:Date.now(), nombre, email, pass, rol:rolSel};
+  usuarios.push(u); saveU(); iniciarSesion(u);
+}
+function iniciarSesion(u) {
+  sesion = u;
+  sessionStorage.setItem('vp_s', JSON.stringify(u));
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.cssText  = 'display:flex;flex-direction:column;';
+  setupApp();
+  navTo('dashboard');
+  toast('¡Bienvenido, ' + u.nombre.split(' ')[0] + '! 👋');
+}
+function logout() {
+  sesion = null; sessionStorage.removeItem('vp_s');
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display  = 'none';
+  document.getElementById('l-email').value = '';
+  document.getElementById('l-pass').value  = '';
+  document.getElementById('auth-err').style.display = 'none';
+  Object.values(charts).forEach(c=>c.destroy()); charts = {};
+}
+
+// ==========================================================
+//  SETUP POR ROL
+// ==========================================================
+function setupApp() {
+  const isV = sesion.rol === 'vendedor';
+  const badge = document.getElementById('top-badge');
+  badge.className = 'tbadge ' + (isV ? 'tbadge-v' : 'tbadge-n');
+  badge.textContent = isV ? '🏪 Vendedor' : '📣 Promotor';
+  const av = document.getElementById('sb-avatar');
+  av.className = 'uavatar ' + (isV ? 'uav-v' : 'uav-n');
+  av.textContent = sesion.nombre.charAt(0).toUpperCase();
+  document.getElementById('sb-name').textContent = sesion.nombre;
+  document.getElementById('sb-rol').textContent  = isV ? 'Vendedor' : 'Promotor';
+  document.getElementById('wrap-mis').style.display       = isV ? 'block' : 'none';
+  document.getElementById('wrap-agregar').style.display   = isV ? 'block' : 'none';
+  document.getElementById('wrap-comisiones').style.display = isV ? 'none' : 'block';
+}
+
+// ==========================================================
+//  NAVEGACIÓN
+// ==========================================================
+function navTo(p) {
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('activo'));
+  document.querySelectorAll('.sb-item').forEach(x=>{ x.classList.remove('av'); x.classList.remove('an'); });
+  document.getElementById('page-'+p).classList.add('activo');
+  const cls = sesion.rol==='vendedor' ? 'av' : 'an';
+  const el  = document.getElementById('nav-'+p);
+  if(el) el.classList.add(cls);
+  if(p==='dashboard')    renderDashboard();
+  if(p==='catalogo')     renderCatalogo();
+  if(p==='mis-productos') renderMisProductos();
+  if(p==='comisiones')   renderComisiones();
+  if(p==='agregar')      { limpiarForm(); document.getElementById('form-titulo').textContent='Nuevo Producto'; document.getElementById('btn-guardar').textContent='Guardar Producto ✓'; }
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('open');
+}
+function toggleSb() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sb-overlay').classList.toggle('open');
+}
+
+// ==========================================================
+//  DASHBOARD
+// ==========================================================
+function renderDashboard() {
+  const isV  = sesion.rol === 'vendedor';
+  const tot  = productos.length;
+  const ganT = productos.reduce((s,p)=>s+Number(p.ganancia),0);
+  const preT = productos.reduce((s,p)=>s+Number(p.precio),0);
+  const cats = [...new Set(productos.map(p=>p.categoria).filter(Boolean))];
+
+  const wc = document.getElementById('wcard');
+  wc.className = 'welcome-card ' + (isV ? '' : 'wn');
+  document.getElementById('wico').textContent = isV ? '🏪' : '📣';
+  document.getElementById('wmsg').textContent = '¡Hola, ' + sesion.nombre.split(' ')[0] + '!';
+  document.getElementById('wsub').textContent = isV
+    ? 'Gestiona tu catálogo, edita precios y mantén actualizado tu inventario.'
+    : 'Revisa el catálogo y descubre cuánto puedes ganar por cada venta.';
+
+  const ss = document.getElementById('dash-stats');
+  if (isV) {
+    ss.innerHTML = `
+      <div class="stat-card sc-v fi"><div class="slabel">Total productos</div><div class="sval cv">${tot}</div><div class="sdelta">En el catálogo</div></div>
+      <div class="stat-card sc-am fi" style="animation-delay:.08s"><div class="slabel">Categorías</div><div class="sval cam">${cats.length}</div><div class="sdelta">Activas</div></div>
+      <div class="stat-card sc-n fi" style="animation-delay:.16s"><div class="slabel">Precio promedio</div><div class="sval cn">$${tot?Math.round(preT/tot).toLocaleString('es-MX'):0}</div><div class="sdelta">Por producto</div></div>
+      <div class="stat-card sc-a fi" style="animation-delay:.24s"><div class="slabel">Ganancia total catálogo</div><div class="sval ca">$${ganT.toLocaleString('es-MX')}</div><div class="sdelta">Si se vende todo</div></div>`;
+  } else {
+    const maxG = tot ? Math.max(...productos.map(p=>p.ganancia)) : 0;
+    ss.innerHTML = `
+      <div class="stat-card sc-v fi"><div class="slabel">Productos disponibles</div><div class="sval cv">${tot}</div><div class="sdelta">Para vender ahora</div></div>
+      <div class="stat-card sc-n fi" style="animation-delay:.08s"><div class="slabel">Comisión promedio</div><div class="sval cn">$${tot?Math.round(ganT/tot).toLocaleString('es-MX'):0}</div><div class="sdelta">Por venta</div></div>
+      <div class="stat-card sc-am fi" style="animation-delay:.16s"><div class="slabel">Mayor comisión</div><div class="sval cam">$${maxG.toLocaleString('es-MX')}</div><div class="sdelta">Producto top</div></div>
+      <div class="stat-card sc-a fi" style="animation-delay:.24s"><div class="slabel">Si vendes todo</div><div class="sval ca">$${ganT.toLocaleString('es-MX')}</div><div class="sdelta">Ganancia posible</div></div>`;
+  }
+
+  document.getElementById('dash-charts').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.2rem;">
+      <div class="chart-card fi" style="animation-delay:.3s">
+        <div class="chart-title">${isV?'Precios del catálogo':'Comisiones por producto'}</div>
+        <canvas id="ch-bar" height="220"></canvas>
+      </div>
+      <div class="chart-card fi" style="animation-delay:.38s">
+        <div class="chart-title">Distribución por categoría</div>
+        <canvas id="ch-pie" height="220"></canvas>
+      </div>
+    </div>`;
+
+  setTimeout(()=>{
+    const labels = productos.map(p=>p.nombre.length>16?p.nombre.slice(0,16)+'…':p.nombre);
+    const vals   = isV ? productos.map(p=>p.precio) : productos.map(p=>p.ganancia);
+    drawBar('ch-bar', labels, vals, isV?'Precio':'Comisión', isV?'#3D8BFF':'#00E5A0');
+
+    const catCount = {};
+    productos.forEach(p=>{ const c=p.categoria||'Sin cat'; catCount[c]=(catCount[c]||0)+1; });
+    drawPie('ch-pie', Object.keys(catCount), Object.values(catCount),
+      ['#00E5A0','#FF7A3D','#3D8BFF','#FFD166','#FF4D6A','#9B5DE5','#00BBF0']);
+  }, 60);
+}
+
+// ==========================================================
+//  CATÁLOGO
+// ==========================================================
+function renderCatalogo() {
+  const cats = ['Todos', ...new Set(productos.map(p=>p.categoria).filter(Boolean))];
+  document.getElementById('cat-ftabs').innerHTML = cats.map(c=>
+    `<button class="ftab ${(c==='Todos'?filtro==='todos':filtro===c)?'fav':''}" onclick="setFiltro('${c==='Todos'?'todos':c}','cat')">${c}</button>`
+  ).join('');
+  const lista = filtro==='todos' ? productos : productos.filter(p=>p.categoria===filtro);
+  document.getElementById('cat-grid').innerHTML = lista.length
+    ? lista.map((p,i)=>prodCard(p,false,i)).join('')
+    : emptyEl('📦','Sin productos','No hay productos en esta categoría');
+}
+
+function setFiltro(f, ctx) {
+  filtro = f;
+  if(ctx==='cat') renderCatalogo();
+  if(ctx==='mp')  renderMisProductos();
+}
+
+// ==========================================================
+//  MIS PRODUCTOS
+// ==========================================================
+function renderMisProductos() {
+  const cats = ['Todos', ...new Set(productos.map(p=>p.categoria).filter(Boolean))];
+  document.getElementById('mp-ftabs').innerHTML = cats.map(c=>
+    `<button class="ftab ${(c==='Todos'?filtro==='todos':filtro===c)?'fav':''}" onclick="setFiltro('${c==='Todos'?'todos':c}','mp')">${c}</button>`
+  ).join('');
+  const lista = filtro==='todos' ? productos : productos.filter(p=>p.categoria===filtro);
+  document.getElementById('mp-grid').innerHTML = lista.length
+    ? lista.map((p,i)=>prodCard(p,true,i)).join('')
+    : emptyEl('📦','Sin productos','Agrega tu primer producto');
+}
+
+// ==========================================================
+//  COMISIONES
+// ==========================================================
+function renderComisiones() {
+  const tot  = productos.reduce((s,p)=>s+Number(p.ganancia),0);
+  const max  = productos.length ? Math.max(...productos.map(p=>p.ganancia)) : 0;
+  const prom = productos.length ? Math.round(tot/productos.length) : 0;
+  document.getElementById('com-stats').innerHTML = `
+    <div class="stat-card sc-v fi"><div class="slabel">Comisión total posible</div><div class="sval cv">$${tot.toLocaleString('es-MX')}</div><div class="sdelta">Si vendes todo</div></div>
+    <div class="stat-card sc-n fi" style="animation-delay:.07s"><div class="slabel">Mayor comisión</div><div class="sval cn">$${max.toLocaleString('es-MX')}</div><div class="sdelta">Producto más rentable</div></div>
+    <div class="stat-card sc-am fi" style="animation-delay:.14s"><div class="slabel">Comisión promedio</div><div class="sval cam">$${prom.toLocaleString('es-MX')}</div><div class="sdelta">Por venta</div></div>`;
+
+  setTimeout(()=>{
+    const labels = productos.map(p=>p.nombre.length>16?p.nombre.slice(0,16)+'…':p.nombre);
+    drawBar('chart-com', labels, productos.map(p=>p.ganancia), 'Comisión', '#FF7A3D');
+  }, 60);
+
+  document.getElementById('com-table').innerHTML = productos.length
+    ? productos.map(p=>`
+      <div class="table-row fi">
+        <div class="pmini">
+          <div class="pmini-img">${p.imagen
+            ? `<img src="${p.imagen}" style="width:100%;height:100%;object-fit:cover;">`
+            : p.emoji||'🛍️'}</div>
+          <div>
+            <div class="pmini-name">${p.nombre}</div>
+            <div class="pmini-cat">${p.categoria||'General'}</div>
+          </div>
+        </div>
+        <div class="tag-p">${p.moneda}${Number(p.precio).toLocaleString('es-MX',{minimumFractionDigits:2})}</div>
+        <div class="tag-g">${p.moneda}${Number(p.ganancia).toLocaleString('es-MX',{minimumFractionDigits:2})}</div>
+        <div><span class="tag-cat">${p.categoria||'General'}</span></div>
+      </div>`).join('')
+    : '<div style="padding:2rem;text-align:center;color:var(--texto2)">Sin productos</div>';
+}
+
+// ==========================================================
+//  CARD DE PRODUCTO
+// ==========================================================
+function prodCard(p, editable, idx) {
+  const WA  = '4481068542';
+  const msg = encodeURIComponent(`¡Hola! Me interesa el producto: *${p.nombre}*\nPrecio: ${p.moneda}${Number(p.precio).toLocaleString('es-MX',{minimumFractionDigits:2})}\n\n¿Podemos coordinar la entrega en persona? 😊`);
+  return `
+  <div class="pcard fi" style="animation-delay:${idx*0.06}s">
+    <div class="pimg-wrap">
+      ${p.imagen
+        ? `<img class="pimg" src="${p.imagen}" alt="${p.nombre}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+           <div class="pemoji" style="display:none">${p.emoji||'🛍️'}</div>`
+        : `<div class="pemoji">${p.emoji||'🛍️'}</div>`}
+      <div class="pcat-badge">${p.categoria||'General'}</div>
+    </div>
+    <div class="pbody">
+      <div class="pnombre">${p.nombre}</div>
+      <div class="pdesc">${p.descripcion}</div>
+      <div class="precios-panel">
+        <div class="precio-row">
+          <div class="precio-key"><div class="bullet b-p"></div>Precio de venta</div>
+          <div class="pamount pa-p">${p.moneda}${Number(p.precio).toLocaleString('es-MX',{minimumFractionDigits:2})}</div>
+        </div>
+        <div class="precio-row">
+          <div class="precio-key"><div class="bullet b-g"></div>Tu ganancia</div>
+          <div class="pamount pa-g">${p.moneda}${Number(p.ganancia).toLocaleString('es-MX',{minimumFractionDigits:2})}</div>
+        </div>
+        <div class="gtag">🎯 Ganas ${p.moneda}${Number(p.ganancia).toLocaleString('es-MX',{minimumFractionDigits:2})} por venta en persona</div>
+      </div>
+      <a class="btn-wa" href="https://wa.me/${WA}?text=${msg}" target="_blank" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Comprar por WhatsApp
+      </a>
+    </div>
+    ${editable ? `
+    <div class="pactions">
+      <button class="btn-edit" onclick="editarProducto(${p.id})">✏️ Editar</button>
+      <button class="btn-del"  onclick="eliminarProducto(${p.id})">🗑</button>
+    </div>` : ''}
+  </div>`;
+}
+
+// ==========================================================
+//  IMAGE UPLOADER — iOS & Android safe
+// ==========================================================
+function abrirGaleria() {
+  // Reset el input para que onChange dispare aunque sea la misma imagen
+  const fi = document.getElementById('file-input');
+  fi.value = '';
+  fi.click();
+}
+
+function onFileChange(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  const tipos = ['image/jpeg','image/jpg','image/png','image/webp'];
+  if (!tipos.includes(file.type)) {
+    toast('⚠️ Solo se permiten JPG, PNG o WEBP', 'err'); return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    toast('⚠️ La imagen supera 5 MB. Elige una más pequeña.', 'err'); return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const b64 = ev.target.result;
+    // Guardar en hidden input
+    document.getElementById('p-imagen').value = b64;
+    // Mostrar preview
+    document.getElementById('img-preview-img').src = b64;
+    document.getElementById('img-preview-box').classList.add('show');
+    document.getElementById('img-empty').style.display = 'none';
+    document.getElementById('emoji-group').style.display = 'none';
+    // Tamaño
+    const kb  = file.size / 1024;
+    const tag = kb > 999 ? (kb/1024).toFixed(1)+' MB' : Math.round(kb)+' KB';
+    document.getElementById('img-size-label').textContent = file.name + ' · ' + tag;
+    document.getElementById('img-note').textContent = '✅ Imagen lista. Puedes cambiarla o quitarla.';
+    toast('📷 Imagen cargada correctamente');
+  };
+  reader.readAsDataURL(file);
+}
+
+function quitarImg() {
+  document.getElementById('p-imagen').value        = '';
+  document.getElementById('file-input').value      = '';
+  document.getElementById('img-preview-img').src   = '';
+  document.getElementById('img-preview-box').classList.remove('show');
+  document.getElementById('img-empty').style.display    = '';
+  document.getElementById('emoji-group').style.display  = '';
+  document.getElementById('img-note').textContent = 'Toca "Seleccionar imagen" para abrir tu galería.';
+}
+
+// ==========================================================
+//  CRUD PRODUCTOS
+// ==========================================================
+function limpiarForm() {
+  ['p-nombre','p-categoria','p-desc','p-precio','p-ganancia','p-emoji'].forEach(id=>{
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('p-edit-id').value  = '';
+  document.getElementById('p-moneda').value   = '$';
+  quitarImg();
+}
+
+function guardarProducto() {
+  const nombre   = document.getElementById('p-nombre').value.trim();
+  const desc     = document.getElementById('p-desc').value.trim();
+  const precio   = parseFloat(document.getElementById('p-precio').value);
+  const ganancia = parseFloat(document.getElementById('p-ganancia').value);
+  if (!nombre||!desc||isNaN(precio)||isNaN(ganancia)) { toast('⚠️ Completa los campos obligatorios','err'); return; }
+  if (ganancia >= precio) { toast('⚠️ La ganancia debe ser menor al precio','err'); return; }
+
+  const datos = {
+    nombre,
+    descripcion: desc,
+    precio, ganancia,
+    categoria: document.getElementById('p-categoria').value.trim() || 'General',
+    moneda:    document.getElementById('p-moneda').value,
+    imagen:    document.getElementById('p-imagen').value,
+    emoji:     document.getElementById('p-emoji').value.trim() || '🛍️',
+  };
+
+  const editId = document.getElementById('p-edit-id').value;
+  if (editId) {
+    const idx = productos.findIndex(p=>p.id===parseInt(editId));
+    if (idx >= 0) { productos[idx] = {...productos[idx], ...datos}; saveP(); toast('✅ Producto actualizado'); navTo('mis-productos'); }
+  } else {
+    productos.unshift({id:Date.now(), ...datos, vendedorId:sesion.id});
+    saveP(); toast('✅ Producto agregado al catálogo'); navTo('mis-productos');
+  }
+}
+
+function editarProducto(id) {
+  const p = productos.find(x=>x.id===id);
+  if (!p) return;
+  navTo('agregar');
+  setTimeout(()=>{
+    document.getElementById('form-titulo').textContent    = 'Editar Producto';
+    document.getElementById('btn-guardar').textContent    = 'Guardar cambios ✓';
+    document.getElementById('p-nombre').value             = p.nombre;
+    document.getElementById('p-categoria').value          = p.categoria||'';
+    document.getElementById('p-desc').value               = p.descripcion;
+    document.getElementById('p-precio').value             = p.precio;
+    document.getElementById('p-ganancia').value           = p.ganancia;
+    document.getElementById('p-moneda').value             = p.moneda||'$';
+    document.getElementById('p-edit-id').value            = p.id;
+    document.getElementById('p-emoji').value              = p.emoji||'';
+    if (p.imagen) {
+      document.getElementById('p-imagen').value             = p.imagen;
+      document.getElementById('img-preview-img').src        = p.imagen;
+      document.getElementById('img-preview-box').classList.add('show');
+      document.getElementById('img-empty').style.display    = 'none';
+      document.getElementById('emoji-group').style.display  = 'none';
+      document.getElementById('img-size-label').textContent = 'Imagen guardada';
+      document.getElementById('img-note').textContent       = '✅ Imagen actual. Puedes cambiarla o quitarla.';
+    }
+  }, 60);
+}
+
+function eliminarProducto(id) {
+  if (!confirm('¿Eliminar este producto?')) return;
+  productos = productos.filter(p=>p.id!==id);
+  saveP(); renderMisProductos(); toast('🗑 Producto eliminado');
+}
+
+// ==========================================================
+//  CHARTS
+// ==========================================================
+function drawBar(id, labels, data, label, color) {
+  if (charts[id]) charts[id].destroy();
+  const ctx = document.getElementById(id); if(!ctx) return;
+  charts[id] = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ label, data,
+      backgroundColor:color+'33', borderColor:color,
+      borderWidth:2, borderRadius:8, borderSkipped:false }]},
+    options:{ responsive:true,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>'$'+c.raw.toLocaleString('es-MX')}} },
+      scales:{
+        x:{ticks:{color:'#7A8499',font:{size:10}},grid:{color:'#1E2535'},border:{color:'#1E2535'}},
+        y:{ticks:{color:'#7A8499',font:{size:10},callback:v=>'$'+v.toLocaleString('es-MX')},grid:{color:'#1E2535'},border:{color:'#1E2535'}}
+      }
+    }
+  });
+}
+function drawPie(id, labels, data, colors) {
+  if (charts[id]) charts[id].destroy();
+  const ctx = document.getElementById(id); if(!ctx) return;
+  charts[id] = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels, datasets:[{data, backgroundColor:colors.slice(0,labels.length), borderColor:'#0E1118', borderWidth:3, hoverOffset:6}]},
+    options:{ responsive:true, cutout:'65%',
+      plugins:{ legend:{position:'bottom',labels:{color:'#7A8499',font:{size:11},padding:14,boxWidth:12}},
+        tooltip:{callbacks:{label:c=>c.label+': '+c.raw+' productos'}} }
+    }
+  });
+}
+
+// ==========================================================
+//  UTILS
+// ==========================================================
+function emptyEl(ico,t,s) {
+  return `<div class="empty-state"><div class="eico">${ico}</div><h3>${t}</h3><p>${s}</p></div>`;
+}
+let toastT;
+function toast(msg, type='') {
+  clearTimeout(toastT);
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = 'toast' + (type==='err' ? ' err' : '');
+  el.classList.add('show');
+  toastT = setTimeout(()=>el.classList.remove('show'), 2800);
+}
+
+// ==========================================================
+//  AUTOLOGIN si hay sesión activa
+// ==========================================================
+if (sesion) {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.cssText  = 'display:flex;flex-direction:column;';
+  setupApp();
+  navTo('dashboard');
+}
+</script>
+</body>
+</html>
